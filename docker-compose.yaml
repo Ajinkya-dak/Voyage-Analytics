@@ -52,11 +52,13 @@ services:
     command: scheduler
 
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
     container_name: jenkins
     ports:
-      - "8081:8080"     # Avoid conflict with Airflow
-      - "50000:50000"   # For Jenkins agents
+      - "8081:8080"
+      - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
     restart: unless-stopped
