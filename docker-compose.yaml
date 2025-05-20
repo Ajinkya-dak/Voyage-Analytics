@@ -9,8 +9,6 @@ services:
       POSTGRES_DB: airflow
     ports:
       - "5432:5432"
-    # volumes: # If you want postgres data to persist across `docker-compose down`
-    #   - postgres_db_data:/var/lib/postgresql/data
 
   webserver:
     build:
@@ -21,18 +19,13 @@ services:
       - postgres
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      # Updated: SQL Alchemy connection string now under [database] section
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__WEBSERVER__LOAD_EXAMPLES: 'false'
-      AIRFLOW__CORE__FERNET_KEY: 'UP6LoYlEBHYCYUDyig87Qt7hSSyePhb-3ssHEQh83TY=' # Should be a securely generated key
-      # Added: Secret key for webserver session security (helps with log fetching & general security)
-      AIRFLOW__WEBSERVER__SECRET_KEY: '926cea97ca68a32d26abfb82c58d071123e20699355581e037db1b4da8f26571' # Replace with a real random key
-      # AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__FERNET_KEY: 'UP6LoYlEBHYCYUDyig87Qt7hSSyePhb-3ssHEQh83TY='
+      AIRFLOW__WEBSERVER__SECRET_KEY: '926cea97ca68a32d26abfb82c58d071123e20699355581e037db1b4da8f26571'
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - .:/app
-      # Consider explicit log mounting if issues persist, though usually handled by executor.
-      # - ./airflow/logs:/opt/airflow/logs 
     ports:
       - "8080:8080"
     command: webserver
@@ -51,15 +44,22 @@ services:
       - postgres
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      # Updated: SQL Alchemy connection string now under [database] section
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CORE__FERNET_KEY: 'UP6LoYlEBHYCYUDyig87Qt7hSSyePhb-3ssHEQh83TY=' # Should be the same key
-      # AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__FERNET_KEY: 'UP6LoYlEBHYCYUDyig87Qt7hSSyePhb-3ssHEQh83TY='
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - .:/app
-      # - ./airflow/logs:/opt/airflow/logs
     command: scheduler
 
-# volumes: # Define the named volume if you uncommented it for postgres
-#   postgres_db_data:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8081:8080"     # Avoid conflict with Airflow
+      - "50000:50000"   # For Jenkins agents
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
