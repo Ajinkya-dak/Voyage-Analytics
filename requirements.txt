@@ -1,0 +1,19 @@
+# Direct, high-level dependencies for your DAG tasks, model code, and app.py functions
+# (assuming these are called by Airflow's PythonOperator)
+
+pandas
+numpy
+scikit-learn>=0.22
+joblib
+flask # Only include this if your Airflow PythonOperators will import code from app.py that needs Flask
+
+# Add other DIRECT high-level dependencies if your DAGs/model scripts import them:
+# For example:
+# requests
+# google-cloud-storage
+# google-auth
+# matplotlib
+# seaborn
+# fastapi
+# uvicorn
+# pydantic

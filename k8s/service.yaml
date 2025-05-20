@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flight-pred-api
+spec:
+  type: LoadBalancer    # or NodePort if your cluster doesn’t support LoadBalancer
+  selector:
+    app: flight-pred-api
+  ports:
+    - port: 80
+      targetPort: 5000
+      protocol: TCP

@@ -1,0 +1,35 @@
+# Use the official Apache Airflow base image
+FROM apache/airflow:2.6.2-python3.10
+
+# Arguments for Airflow and Python versions (consistent with the base image)
+ARG AIRFLOW_VERSION=2.6.2
+ARG PYTHON_VERSION=3.10
+
+# Switch to root user for system-level operations
+USER root
+
+# Install necessary system packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libffi-dev curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create Airflow directory and download the official constraints file
+RUN mkdir -p /opt/airflow && \
+    curl -LfO "https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt" && \
+    mv "constraints-${PYTHON_VERSION}.txt" /opt/airflow/constraints.txt && \
+    chown airflow:0 /opt/airflow/constraints.txt
+
+# Copy DAGs to the Airflow DAGs folder in the container
+COPY airflow/dags /opt/airflow/dags
+RUN chown -R airflow:0 /opt/airflow/dags
+
+# Copy the project's requirements file
+COPY requirements.txt /tmp/requirements.txt
+RUN chown airflow:0 /tmp/requirements.txt
+
+# Switch to the airflow user for Python package installation
+USER airflow
+
+# Install Python dependencies using the constraints file
+RUN pip install --no-cache-dir -r /tmp/requirements.txt --constraint /opt/airflow/constraints.txt
